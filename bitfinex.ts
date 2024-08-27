@@ -27,7 +27,7 @@ export class BitFinex implements OrderHandler {
         
         const nonce = Date.now().toString();
         const body = {
-            type: "EXCHANGE LIMIT",
+            type: "EXCHANGE LIMIT", // @todo: remove hardcode of type
             symbol: order.symbol,
             amount: order.quantity.quantity.toString(),
             price: order.price1.toString(),
@@ -39,6 +39,8 @@ export class BitFinex implements OrderHandler {
         
         console.log(payload);
 
+
+        // @remove hardcode of url
         const signatureChain = '/api/v2/auth/w/order/submit' + nonce + payload;
     
         const signature = crypto
