@@ -29,8 +29,8 @@ export class BitFinex implements OrderHandler {
         const body = {
             type: "EXCHANGE LIMIT",
             symbol: order.symbol,
-            amount: order.quantity.quantity,
-            price: order.price1,
+            amount: order.quantity.quantity.toString(),
+            price: order.price1.toString(),
             request: urlPath,
             nonce: nonce
         };
