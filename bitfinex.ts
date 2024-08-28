@@ -17,6 +17,25 @@ export class BitFinex implements OrderHandler {
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
     }
+
+    _createCredentials(urlPath:string, body: {[key:string]: any}) {
+   
+        const nonce = Date.now().toString();
+
+        const payload = JSON.stringify(body);
+
+        // @remove hardcode of url
+        const signatureChain = '/api' + urlPath + nonce + payload;
+    
+        return {
+            'bfx-nonce': nonce,
+            'bfx-apikey': this.apiKey,
+            'bfx-signature': crypto
+            .createHmac('sha384', this.apiSecret)
+            .update(signatureChain)
+            .digest('hex')
+        }
+    }
     
     submitOrder(order: Order): Promise<Order> {
         const urlPath = '/v2/auth/w/order/submit';
@@ -24,46 +43,26 @@ export class BitFinex implements OrderHandler {
     
         const apiKey = this.apiKey;
         const apiSecret = this.apiSecret;
-        
-        const nonce = Date.now().toString();
-        const body = {
+        const requestBody = {
             type: "EXCHANGE LIMIT", // @todo: remove hardcode of type
             symbol: order.symbol,
             amount: order.quantity.quantity.toString(),
-            price: order.price1.toString(),
-            request: urlPath,
-            nonce: nonce
+            price: order.price1.toString()
         };
-
-        const payload = JSON.stringify(body);
-        
-        console.log(payload);
-
-
-        // @remove hardcode of url
-        const signatureChain = '/api/v2/auth/w/order/submit' + nonce + payload;
-    
-        const signature = crypto
-            .createHmac('sha384', apiSecret)
-            .update(signatureChain)
-            .digest('hex');
 
         const headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'bfx-nonce': nonce,
-            'bfx-apikey': apiKey,
-            'bfx-signature': signature
+            ...this._createCredentials(urlPath, requestBody)
         }
     
         return fetch(url, {
             method: 'POST',
-            body: JSON.stringify(body),
+            body: JSON.stringify(requestBody),
             headers: headers
         })
         .then((response) => response.json())
         .then((result) => {
-            console.log(result);
             order.external_id = result[4][0];
             return order;
         })
