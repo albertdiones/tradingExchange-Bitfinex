@@ -4,6 +4,10 @@ import { BitFinex } from "../bitfinex";
 
 const exchange = new BitFinex(process.env.API_KEY, process.env.API_SECRET);
 
+
+
+exchange.saveOrder = (order) => Promise.resolve(order);
+
 const orderId = process.argv.slice(2)[0];
 
 const order = new Order(
