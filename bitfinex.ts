@@ -10,6 +10,14 @@ export class BitFinex implements OrderHandler {
         [OrderType.LIMIT]: "EXCHANGE LIMIT",
     }
 
+    static orderStatuses: {[key: string]: OrderStatus} = {
+        'ACTIVE': OrderStatus.SUBMITTED,
+        'EXECUTED': OrderStatus.FILLED,
+        'CANCELED': OrderStatus.CANCELLED,
+        'FORCED EXECUTED': OrderStatus.FILLED,
+        'PARTIALLY FILLED': OrderStatus.PARTIALLY_FILLED,
+    }
+
     apiKey:string;
     apiSecret:string;
 
@@ -73,6 +81,45 @@ export class BitFinex implements OrderHandler {
             throw error;
         });
     }
+
+    getSubmittedOrder = (id: number): Order | null => {
+        return Order.findOne(
+            {external_id: id}
+        );
+    }
+    
+    checkOrder(order: SubmittedOrder): Promise<Order | null> {
+        return this.getOrdersFromExchange().then(
+            (result) => {
+                if (result[0] === 'error') {
+                    return null;
+                }
+                return result.find(
+                    (exchangeOrder) => exchangeOrder[0] == parseInt(order.external_id)
+                );
+            }
+        ).then(
+            (submittedOrder: Array<any>) => {             
+
+                const dbOrder = this.getSubmittedOrder(Number.parseInt(submittedOrder[0]));
+
+                if (!dbOrder) {
+                    throw 'not on the db';
+                }
+
+                dbOrder.status = BitFinex.orderStatuses[submittedOrder[13]] ?? 'unknown';
+
+                if ([OrderStatus.FILLED].includes(dbOrder.status)) {
+                    // could be improved, use the last(or first?) trade's timestamp as execution
+                    dbOrder.execution_timestamp = Date.now();
+                }
+
+                // trades accordingly
+                
+                return dbOrder;
+            }
+        )
+    }
     
     cancelOrder(order: SubmittedOrder): Promise<Order> {
         const urlPath = '/v2/auth/w/order/cancel';
@@ -110,7 +157,16 @@ export class BitFinex implements OrderHandler {
         });
     }
 
-    getSubmittedOrders = (): Promise<SubmittedOrder[]> => {
+    getSubmittedOrders = () => this.getOrdersFromExchange().then((result) => {
+        return result.map(
+            (order: [number, number, number, symbol]): SubmittedOrder => {
+                console.log('order', order);
+                return { external_id: order[0].toString() }
+            }
+        )
+    })
+
+    async getOrdersFromExchange(): Promise<Array<any>> {
         const urlPath = '/v2/auth/r/orders';
         const url = `${BitFinex.baseUrl}${urlPath}`;
 
@@ -125,14 +181,6 @@ export class BitFinex implements OrderHandler {
             headers: headers
         })
         .then((response) => response.json())
-        .then((result) => {
-            return result.map(
-                (order: [number, number, number, symbol]): SubmittedOrder => {
-                    console.log('order', order);
-                    return { external_id: order[0].toString() }
-                }
-            )
-        })
         .catch((error) => {
             console.error('Error:', error);
             throw error;
