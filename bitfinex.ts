@@ -1,5 +1,5 @@
 import { type OrderHandler } from 'tradeorders/orderHandler'
-import { ORDER_TYPE_LIMIT, OrderType, type Order } from 'tradeorders/schema';
+import { ORDER_TYPE_LIMIT, OrderStatus, OrderType, type Order } from 'tradeorders/schema';
 import crypto from 'crypto';
 
 export class BitFinex implements OrderHandler {
@@ -63,7 +63,40 @@ export class BitFinex implements OrderHandler {
         })
         .then((response) => response.json())
         .then((result) => {
-            order.external_id = result[4][0];
+            order.external_id = result[4][0][0];
+            return order;
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            throw error;
+        });
+    }
+    
+    cancelOrder(order: Order): Promise<Order> {
+        const urlPath = '/v2/auth/w/order/cancel';
+        const url = `${BitFinex.baseUrl}${urlPath}`;
+    
+        const requestBody = {
+            id: parseInt(order.external_id)
+        };
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...this._createCredentials(urlPath, requestBody)
+        }
+
+        console.log('requestBody', requestBody);
+    
+        return fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(requestBody),
+            headers: headers
+        })
+        .then((response) => response.json())
+        .then((result) => {
+            console.log(result);
+            order.status = OrderStatus.CANCELLED;
             return order;
         })
         .catch((error) => {

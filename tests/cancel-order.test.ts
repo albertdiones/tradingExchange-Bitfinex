@@ -4,6 +4,8 @@ import { BitFinex } from "../bitfinex";
 
 const exchange = new BitFinex(process.env.API_KEY, process.env.API_SECRET);
 
+const orderId = process.argv.slice(2)[0];
+
 const order = new Order(
     {
         instrument_type: 'spot',
@@ -16,12 +18,10 @@ const order = new Order(
             quantity: -4,
             unit: OrderQuantityUnit.QUOTE
         },
+        external_id: orderId
     }
 )
 
-exchange.submitOrder(order)
-.then(
-    (submittedOrder) => {
-        console.log(submittedOrder);
-    }
-);
+console.log(orderId);
+
+exchange.cancelOrder(order);
