@@ -31,4 +31,4 @@ Todos:
  [x] cancel order
  [x] cancel all orders
  [x] check order
- * market order and other types of order
+ [x] market order and other types of order

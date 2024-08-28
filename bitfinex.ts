@@ -7,8 +7,9 @@ export class BitFinex implements OrderHandler {
     static baseUrl = 'https://api.bitfinex.com';
 
     // @todo: support the other order types (e.g. market)
-    static types: {[key: OrderType]: string} = {
+    static types: {[key: string]: string} = {
         [OrderType.LIMIT]: "EXCHANGE LIMIT",
+        [OrderType.MARKET]: "EXCHANGE MARKET",
     }
 
     static orderStatuses: {[key: string]: OrderStatus} = {
@@ -55,11 +56,14 @@ export class BitFinex implements OrderHandler {
         const apiKey = this.apiKey;
         const apiSecret = this.apiSecret;
         const requestBody = {
-            type: "EXCHANGE LIMIT", // @todo: remove hardcode of type
+            type: BitFinex.types[order.type], 
             symbol: order.symbol,
             amount: order.quantity.quantity.toString(),
-            price: order.price1.toString()
         };
+
+        if (order.price1) {
+            requestBody.price = order.price1?.toString()
+        }
 
         const headers = {
             'Content-Type': 'application/json',
@@ -74,6 +78,10 @@ export class BitFinex implements OrderHandler {
         })
         .then((response) => response.json())
         .then((result) => {
+            if (result[0] === 'error') {
+                console.error(result);
+                return;
+            }
             order.external_id = result[4][0][0];
             return this.saveOrder(order);
         })
@@ -151,6 +159,11 @@ export class BitFinex implements OrderHandler {
                                     return trade;
                                 }
                             );
+
+                            if (dbOrder.price1 === null) {
+                                const lastTrade = trades[trades.length-1];
+                                dbOrder.price1 = lastTrade[5];
+                            }
                             return this.saveOrder(dbOrder);
                         }
                     );
