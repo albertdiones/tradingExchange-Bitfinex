@@ -6,6 +6,7 @@ export class BitFinex implements OrderHandler {
 
     static baseUrl = 'https://api.bitfinex.com';
 
+    // @todo: support the other order types (e.g. market)
     static types: {[key: OrderType]: string} = {
         [OrderType.LIMIT]: "EXCHANGE LIMIT",
     }
@@ -105,14 +106,19 @@ export class BitFinex implements OrderHandler {
                     return activeOrder;
                 }
                 return this.getOrderHistoryFromExchange().then(
-                    (result) => result.find(
-                        (exchangeOrder) => exchangeOrder[0] == parseInt(order.external_id)
-                    )
+                    (result) => {
+                        return result.find(
+                        (exchangeOrder) => exchangeOrder[0] == parseInt(order.external_id));
+                    }
                 )
             }
         )
         .then(
             (submittedOrder: Array<any>) => {             
+
+                if (!submittedOrder) {
+                    return;
+                }
 
                 const dbOrder = this.getSubmittedOrder(Number.parseInt(submittedOrder[0]));
 
@@ -120,7 +126,14 @@ export class BitFinex implements OrderHandler {
                     throw 'not on the db';
                 }
 
-                dbOrder.status = BitFinex.orderStatuses[submittedOrder[13]] ?? 'unknown';
+                const exchangeStatus: string = submittedOrder[13];
+
+                let statusKey = exchangeStatus;
+                if (exchangeStatus.startsWith('EXECUTED')) {
+                    statusKey = 'EXECUTED';
+                }
+
+                dbOrder.status = BitFinex.orderStatuses[statusKey] ?? 'unknown';
 
                 if ([OrderStatus.FILLED].includes(dbOrder.status)) {
                     // could be improved, use the last(or first?) trade's timestamp as execution

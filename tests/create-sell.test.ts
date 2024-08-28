@@ -7,6 +7,8 @@ const exchange = new BitFinex(process.env.API_KEY, process.env.API_SECRET);
 
 exchange.saveOrder = (order) => Promise.resolve(order);
 
+const price = process.argv.slice(2)[0] ?? -0.8;
+
 const order = new Order(
     {
         instrument_type: 'spot',
@@ -14,7 +16,7 @@ const order = new Order(
         direction: OrderDirection.LONG,
         status: OrderStatus.PENDING,
         type: OrderType.LIMIT,
-        price1: 0.8,
+        price1: price,
         quantity: {
             quantity: -4,
             unit: OrderQuantityUnit.QUOTE
