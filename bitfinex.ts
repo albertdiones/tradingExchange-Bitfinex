@@ -1,6 +1,15 @@
 import { type OrderHandler } from 'tradeorders/orderHandler'
-import { ORDER_TYPE_LIMIT, OrderStatus, OrderType, type Order } from 'tradeorders/schema';
+import { Order, ORDER_TYPE_LIMIT, OrderStatus, OrderType } from 'tradeorders/schema';
 import crypto from 'crypto';
+
+
+interface SubmittedOrder {
+    external_id: string;
+}
+
+const order: SubmittedOrder = {
+    external_id: '123'
+}
 
 export class BitFinex implements OrderHandler {
 
@@ -103,6 +112,21 @@ export class BitFinex implements OrderHandler {
             console.error('Error:', error);
             throw error;
         });
+    }
+
+    getSubmittedOrders = () => Order.find({
+        status: OrderStatus.SUBMITTED
+    });
+
+    async cancelAllOrders(): Promise<Order[]> {
+        return this.getSubmittedOrders()
+            .then(
+                (orders: SubmittedOrder[]) => Promise.all(
+                    orders.map(
+                        (order) => this.cancelOrder(order)
+                    )
+                )
+            );
     }
 
 }
