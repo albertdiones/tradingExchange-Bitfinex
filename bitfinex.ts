@@ -94,7 +94,6 @@ export class BitFinex implements OrderHandler {
     checkOrder(order: SubmittedOrder): Promise<Order | null> {
         return this.getOrdersFromExchange().then(
             (result) => {
-                console.log('checkOrder() result', result);
                 if (result[0] === 'error') {
                     return null;
                 }
@@ -116,6 +115,7 @@ export class BitFinex implements OrderHandler {
         .then(
             (submittedOrder: Array<any>) => {             
 
+                console.log('checkOrder() result', submittedOrder);
                 if (!submittedOrder) {
                     return;
                 }
@@ -140,9 +140,20 @@ export class BitFinex implements OrderHandler {
                     dbOrder.execution_timestamp = Date.now();
                 }
 
-                // trades accordingly
+                // @todo update trades accordingly
 
-                return this.saveOrder(dbOrder);
+                return this.getTradeOrdersFromExchange(dbOrder)
+                    .then(
+                        (trades: Array<Array<any>>) => {
+                            console.log('trades', trades);
+                            dbOrder.trades = trades.map(
+                                (trade) => {
+                                    return trade;
+                                }
+                            );
+                            return this.saveOrder(dbOrder);
+                        }
+                    );
             }
         )
     }
@@ -203,6 +214,32 @@ export class BitFinex implements OrderHandler {
     
         return fetch(url, {
             method: 'POST',
+            headers: headers
+        })
+        .then((response) => response.json())
+        .catch((error) => {
+            console.error('Error:', error);
+            throw error;
+        });
+    }
+
+    
+
+    async getTradeOrdersFromExchange(order: Order): Promise<Array<any>> {
+        const urlPath = `/v2/auth/r/order/${order.symbol}:${order.external_id}/trades`;
+        const url = `${BitFinex.baseUrl}${urlPath}`;
+
+        const requestBody = {};
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...this._createCredentials(urlPath, requestBody)
+        }
+    
+        return fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(requestBody),
             headers: headers
         })
         .then((response) => response.json())

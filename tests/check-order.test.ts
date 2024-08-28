@@ -7,16 +7,18 @@ const exchange = new BitFinex(process.env.API_KEY, process.env.API_SECRET);
 
 exchange.saveOrder = (order) => Promise.resolve(order);
 
+const orderId = process.argv.slice(2)[0];
+const symbol = process.argv.slice(3)[0];
+
 
 exchange.getSubmittedOrder = (external_id) => {
     return new Order(
         {
+            symbol: symbol,
             external_id: external_id
         }
     );
 }
-
-const orderId = process.argv.slice(2)[0];
 
 console.log(orderId);
 
