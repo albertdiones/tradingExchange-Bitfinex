@@ -6,9 +6,9 @@
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.5.4"
   },
   "dependencies": {
-    "tradeorders": "git@github.com:albertdiones/tradeOrders.git"
+    "tradeorders": "https://github.com/albertdiones/tradeOrders.git"
   }
 }
