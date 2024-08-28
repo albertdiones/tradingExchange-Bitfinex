@@ -2,6 +2,10 @@
 
 Bitfinex implementation of orderHandler
 
+ * Creating order
+ * Checking the status of the order
+ * Canceling orders
+
 example:
 ```
 const order = new Order(
@@ -21,3 +25,10 @@ const order = new Order(
 
 exchange.submitOrder(order);
 ```
+
+
+Todos:
+ * cancel order
+ * cancel all orders
+ * check order
+ * market order and other types of order
