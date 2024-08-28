@@ -29,6 +29,6 @@ exchange.submitOrder(order);
 
 Todos:
  [x] cancel order
- * cancel all orders
+ [x] cancel all orders
  * check order
  * market order and other types of order
