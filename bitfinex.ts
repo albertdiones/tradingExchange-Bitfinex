@@ -97,7 +97,9 @@ export class BitFinex implements OrderHandler {
         .then((result) => {
             console.log(result);
             if (result[0] === 'error') {
-                return this.cancelOrder(order);
+                return Bun.sleep(1000).then(
+                    () => this.cancelOrder(order)
+                );
             }
             order.status = OrderStatus.CANCELLED;
             return order;
