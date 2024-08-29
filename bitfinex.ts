@@ -1,5 +1,5 @@
 import { type OrderHandler } from 'tradeorders/orderHandler'
-import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderStatus, OrderType, Submitted, type SubmittedOrder } from 'tradeorders/schema';
+import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType, type SubmittedOrder } from 'tradeorders/schema';
 import crypto from 'crypto';
 
 export class BitFinex implements OrderHandler {
@@ -63,6 +63,10 @@ export class BitFinex implements OrderHandler {
         }
         else {
             orderQuantity = order.quantity.quantity;
+        }
+
+        if (order.quantity.unit === OrderQuantityUnit.QUOTE) {
+            orderQuantity /= order.price1;
         }
 
         const requestBody = {
