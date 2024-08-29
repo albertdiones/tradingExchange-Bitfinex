@@ -51,25 +51,14 @@ export class BitFinex implements OrderHandler {
         }
     }
 
-    fetchWallet(): Array<[string, string, number, number, number, string, object]> {
-        const urlPath = '/v2/auth/r/wallets';
+    _fetch(urlPath:string, body?: {[key:string]: any}): Promise<any> {
+        
         const url = `${BitFinex.baseUrl}${urlPath}`;
-    
-        const requestBody = {};
 
-        const headers = this._createHeaders(urlPath, requestBody);
-    
         return fetch(url, {
             method: 'POST',
-            body: JSON.stringify(requestBody),
-            headers: headers
-        })
-        .then((response) => response.json())
-        .then((result) => {
-            if (result[0] === 'error') {
-                throw 'error on fetching wallet'
-            }
-            return result;
+            body: JSON.stringify(body),
+            headers: this._createHeaders(urlPath, body)
         })
         .catch((error) => {
             console.error('Error:', error);
@@ -77,13 +66,22 @@ export class BitFinex implements OrderHandler {
         });
     }
 
+    fetchWallet(): Array<[string, string, number, number, number, string, object]> {    
+        return this._fetch('/v2/auth/r/wallets', {})
+        .then((response) => response.json())
+        .then((result) => {
+            if (result[0] === 'error') {
+                throw 'error on fetching wallet'
+            }
+            return result;
+        });
+    }
+
     _getSymbolAsset(symbol: string): string {
         return symbol.substring(1).replace(/USD$/,'');
     }
     
-    async submitOrder(order: Order): Promise<Order> {
-        const urlPath = '/v2/auth/w/order/submit';
-        const url = `${BitFinex.baseUrl}${urlPath}`;
+    async submitOrder(order: Order): Promise<Order | void> {
 
         if (order.quantity.quantity <= 0) {
             throw "Invalid quantity";
@@ -122,26 +120,20 @@ export class BitFinex implements OrderHandler {
             requestBody.price = order.price1?.toString()
         }
 
-        const headers = this._createHeaders(urlPath, requestBody);
-    
-        return fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(requestBody),
-            headers: headers
-        })
-        .then((response) => response.json())
-        .then((result) => {
-            if (result[0] === 'error') {
-                console.error(result);
-                return;
-            }
-            order.external_id = result[4][0][0];
-            return this.saveOrder(order);
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            throw error;
-        });
+        return this._fetch('/v2/auth/w/order/submit', requestBody)
+            .then((response) => response.json())
+            .then((result) => {
+                if (result[0] === 'error') {
+                    console.error(result);
+                    return;
+                }
+                order.external_id = result[4][0][0];
+                return this.saveOrder(order);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                throw error;
+            });
     }
 
     getSubmittedOrder = (id: number): Order | null => {
@@ -206,7 +198,13 @@ export class BitFinex implements OrderHandler {
                 return this.getTradeOrdersFromExchange(dbOrder)
                     .then(
                         (trades: Array<Array<any>>) => {
+
                             console.log('trades', trades);
+
+                            if (trades[0] === 'error') {
+                                return dbOrder;
+                            }
+
                             dbOrder.trades = trades.map(
                                 (trade) => {
                                     return trade;
@@ -217,29 +215,24 @@ export class BitFinex implements OrderHandler {
                                 const lastTrade = trades[trades.length-1];
                                 dbOrder.price1 = lastTrade[5];
                             }
-                            return this.saveOrder(dbOrder);
+
+                            return dbOrder;
                         }
-                    );
+                    )
+                    .then(
+                        (order) => this.saveOrder(dbOrder)
+                    )
             }
         )
     }
     
     cancelOrder(order: SubmittedOrder): Promise<Order> {
-        const urlPath = '/v2/auth/w/order/cancel';
-        const url = `${BitFinex.baseUrl}${urlPath}`;
     
         const requestBody = {
             id: parseInt(order.external_id)
         };
-
-
-        const headers = this._createHeaders(urlPath, requestBody);
     
-        return fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(requestBody),
-            headers: headers
-        })
+        return this._fetch('/v2/auth/w/order/cancel', requestBody)
         .then((response) => response.json())
         .then((result) => {
             console.log(result);
@@ -266,15 +259,8 @@ export class BitFinex implements OrderHandler {
     })
 
     async getOrdersFromExchange(): Promise<Array<any>> {
-        const urlPath = '/v2/auth/r/orders';
-        const url = `${BitFinex.baseUrl}${urlPath}`;
-
-        const headers = this._createHeaders(urlPath);
     
-        return fetch(url, {
-            method: 'POST',
-            headers: headers
-        })
+        return this._fetch('/v2/auth/r/orders')
         .then((response) => response.json())
         .catch((error) => {
             console.error('Error:', error);
@@ -286,18 +272,8 @@ export class BitFinex implements OrderHandler {
 
     async getTradeOrdersFromExchange(order: Order): Promise<Array<any>> {
         const urlPath = `/v2/auth/r/order/${order.symbol}:${order.external_id}/trades`;
-        const url = `${BitFinex.baseUrl}${urlPath}`;
-
-        const requestBody = {};
-
- 
-        const headers = this._createHeaders(urlPath, requestBody);
-    
-        return fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(requestBody),
-            headers: headers
-        })
+         
+        return this._fetch(urlPath, {})
         .then((response) => response.json())
         .catch((error) => {
             console.error('Error:', error);
@@ -308,19 +284,13 @@ export class BitFinex implements OrderHandler {
     
     async getOrderHistoryFromExchange(): Promise<Array<any>> {
         const urlPath = '/v2/auth/r/orders/hist';
-        const url = `${BitFinex.baseUrl}${urlPath}`;
-
-        const headers = this._createHeaders(urlPath);
     
-        return fetch(url, {
-            method: 'POST',
-            headers: headers
-        })
-        .then((response) => response.json())
-        .catch((error) => {
-            console.error('Error:', error);
-            throw error;
-        });
+        return this._fetch(urlPath, {})
+            .then((response) => response.json())
+            .catch((error) => {
+                console.error('Error:', error);
+                throw error;
+            });
     }
 
     async cancelAllOrders(): Promise<Order[]> {
