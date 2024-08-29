@@ -9,6 +9,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "nonChallantJs": "https://github.com/albertdiones/nonChallant.git",
     "tradeorders": "https://github.com/albertdiones/tradeOrders.git"
   }
 }

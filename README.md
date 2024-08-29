@@ -34,7 +34,8 @@ Todos:
  [x] market order and other types of order
  [x] enforce/implement order direction
  [x] enforce/implement quantity unit
-  * make the code the dry-er
+ [x] make the code the dry-er
+ [x] implement xhrjson(nonChallantJs) http client
   * create automated tests
   * implement "time in force" in orders
   * implement candle fetches for complete usability on trading bot

@@ -1,6 +1,7 @@
 import { type OrderHandler } from 'tradeorders/orderHandler'
 import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType, type SubmittedOrder } from 'tradeorders/schema';
 import crypto from 'crypto';
+import HttpClient from 'nonChallantJs';
 
 export class BitFinex implements OrderHandler {
 
@@ -25,15 +26,20 @@ export class BitFinex implements OrderHandler {
 
     nonce:number = 0;
 
-    constructor(apiKey: string, apiSecret: string) {
+    client: HttpClient | undefined;
+
+    constructor(apiKey: string, apiSecret: string, options?:  {client: HttpClient}) {
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.nonce = Date.now();
+        if (options?.client) {
+            this.client = options.client;
+        }        
     }
 
     _createHeaders(urlPath:string, body?: {[key:string]: any}) {
    
-        const nonce:string = (this.nonce++).toString() + "" + Math.ceil(Math.random()*1000).toString();
+        const nonce:string = (this.nonce++).toString();
         const payload = body ? JSON.stringify(body) : '';
 
         // @remove hardcode of url
@@ -55,14 +61,25 @@ export class BitFinex implements OrderHandler {
         
         const url = `${BitFinex.baseUrl}${urlPath}`;
 
-        return fetch(url, {
+        const headers = this._createHeaders(urlPath, body);
+
+        console.log('bfx-nonce', headers['bfx-nonce']);
+
+        return this.client.post(url, {
             method: 'POST',
             body: JSON.stringify(body),
-            headers: this._createHeaders(urlPath, body)
+            headers: headers
         })
-        .then((response) => response.json())
+        .then(
+            (result) => {
+                if (result[0] === 'error') {
+                    throw `error on fetching ${urlPath} ${JSON.stringify(result)}`
+                }
+                return result;
+            }
+        )
         .catch((error) => {
-            console.error('Error:', error);
+            console.error('Error:', error, error.stack);
             throw error;
         });
     }
@@ -70,9 +87,6 @@ export class BitFinex implements OrderHandler {
     fetchWallet(): Array<[string, string, number, number, number, string, object]> {    
         return this._fetch('/v2/auth/r/wallets', {})
         .then((result) => {
-            if (result[0] === 'error') {
-                throw 'error on fetching wallet'
-            }
             return result;
         });
     }
@@ -122,16 +136,12 @@ export class BitFinex implements OrderHandler {
 
         return this._fetch('/v2/auth/w/order/submit', requestBody)
             .then((result) => {
-                if (result[0] === 'error') {
-                    console.error(result);
-                    return;
-                }
                 order.external_id = result[4][0][0];
                 return this.saveOrder(order);
             })
     }
 
-    getSubmittedOrder = (id: number): Order | null => {
+    getSubmittedOrder = (id: number): Promise<Order | null> => {
         return Order.findOne(
             {external_id: id}
         );
@@ -142,9 +152,6 @@ export class BitFinex implements OrderHandler {
     checkOrder(order: SubmittedOrder): Promise<Order | null> {
         return this.getOrdersFromExchange().then(
             (result) => {
-                if (result[0] === 'error') {
-                    return null;
-                }
                 const activeOrder = result.find(
                     (exchangeOrder) => exchangeOrder[0] == parseInt(order.external_id)
                 );
@@ -196,7 +203,7 @@ export class BitFinex implements OrderHandler {
 
                             console.log('trades', trades);
 
-                            if (trades[0] === 'error') {
+                            if (trades.length <= 0) {
                                 return dbOrder;
                             }
 
@@ -228,16 +235,30 @@ export class BitFinex implements OrderHandler {
         };
     
         return this._fetch('/v2/auth/w/order/cancel', requestBody)
-        .then((result) => {
-            console.log(result);
-            if (result[0] === 'error') {
-                return Bun.sleep(1000).then(
-                    () => this.cancelOrder(order)
-                );
-            }
-            order.status = OrderStatus.CANCELLED;
-            return this.saveOrder(order);
-        })
+            .then((result) => {
+                console.log(result);
+                return this.getSubmittedOrder(
+                    parseInt(order.external_id)
+                )
+                .then(
+                    (order: Order | null) => {
+                        if (!order) {
+                            throw 'order not found in mongo';
+                        }
+                        order.status = OrderStatus.CANCELLED;
+                        return this.saveOrder(order);
+                    }
+                )
+            }).catch(
+                (error) => {
+                    console.error(error);
+
+                    // retry
+                    return Bun.sleep(1000).then(
+                        () => this.cancelOrder(order)
+                    );
+                }
+            )
     }
 
     getSubmittedOrders = () => this.getOrdersFromExchange().then((result) => {
@@ -248,8 +269,7 @@ export class BitFinex implements OrderHandler {
         )
     })
 
-    async getOrdersFromExchange(): Promise<Array<any>> {
-    
+    async getOrdersFromExchange(): Promise<Array<any>> {    
         return this._fetch('/v2/auth/r/orders');
     }
 

@@ -5,6 +5,7 @@ import { BitFinex } from "../bitfinex";
 const exchange = new BitFinex(process.env.API_KEY, process.env.API_SECRET);
 
 
+exchange.getSubmittedOrder = (id: number): Promise<Order | null> => Promise.resolve(new Order());
 
 exchange.saveOrder = (order) => Promise.resolve(order);
 
