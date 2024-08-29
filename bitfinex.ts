@@ -48,8 +48,42 @@ export class BitFinex implements OrderHandler {
             .digest('hex')
         }
     }
+
+    fetchWallet(): Array<[string, string, number, number, number, string, object]> {
+        const urlPath = '/v2/auth/r/wallets';
+        const url = `${BitFinex.baseUrl}${urlPath}`;
     
-    submitOrder(order: Order): Promise<Order> {
+        const requestBody = {};
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...this._createCredentials(urlPath, requestBody)
+        }
+    
+        return fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(requestBody),
+            headers: headers
+        })
+        .then((response) => response.json())
+        .then((result) => {
+            if (result[0] === 'error') {
+                throw 'error on fetching wallet'
+            }
+            return result;
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            throw error;
+        });
+    }
+
+    _getSymbolAsset(symbol: string): string {
+        return symbol.substring(1).replace(/USD$/,'');
+    }
+    
+    async submitOrder(order: Order): Promise<Order> {
         const urlPath = '/v2/auth/w/order/submit';
         const url = `${BitFinex.baseUrl}${urlPath}`;
 
@@ -67,6 +101,17 @@ export class BitFinex implements OrderHandler {
 
         if (order.quantity.unit === OrderQuantityUnit.QUOTE) {
             orderQuantity /= order.price1;
+        }
+
+        if (order.quantity.unit === OrderQuantityUnit.PERCENT) {
+            const wallet = await this.fetchWallet();
+            const baseCurrencyBalance = wallet.find(
+                (currency: [string, string, number, number]) => {
+                    return currency[1] === this._getSymbolAsset(order.symbol);
+                }
+            );
+
+            orderQuantity = (orderQuantity/100)*baseCurrencyBalance[2];
         }
 
         const requestBody = {
