@@ -13,12 +13,12 @@ const order = new Order(
     {
         instrument_type: 'spot',
         symbol: "tXRPUSD",
-        direction: OrderDirection.LONG,
+        direction: OrderDirection.SHORT,
         status: OrderStatus.PENDING,
         type: OrderType.LIMIT,
         price1: price,
         quantity: {
-            quantity: -4,
+            quantity: 4,
             unit: OrderQuantityUnit.QUOTE
         },
     }

@@ -1,5 +1,5 @@
 import { type OrderHandler } from 'tradeorders/orderHandler'
-import { Order, ORDER_TYPE_LIMIT, OrderStatus, OrderType, Submitted, type SubmittedOrder } from 'tradeorders/schema';
+import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderStatus, OrderType, Submitted, type SubmittedOrder } from 'tradeorders/schema';
 import crypto from 'crypto';
 
 export class BitFinex implements OrderHandler {
@@ -52,13 +52,23 @@ export class BitFinex implements OrderHandler {
     submitOrder(order: Order): Promise<Order> {
         const urlPath = '/v2/auth/w/order/submit';
         const url = `${BitFinex.baseUrl}${urlPath}`;
-    
-        const apiKey = this.apiKey;
-        const apiSecret = this.apiSecret;
+
+        if (order.quantity.quantity <= 0) {
+            throw "Invalid quantity";
+        }
+
+        let orderQuantity:number;
+        if (order.direction === OrderDirection.SHORT) {
+            orderQuantity = -order.quantity.quantity;
+        }
+        else {
+            orderQuantity = order.quantity.quantity;
+        }
+
         const requestBody = {
             type: BitFinex.types[order.type], 
             symbol: order.symbol,
-            amount: order.quantity.quantity.toString(),
+            amount: orderQuantity.toString(),
         };
 
         if (order.price1) {
