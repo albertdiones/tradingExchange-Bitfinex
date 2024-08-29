@@ -1,8 +1,5 @@
 import { Order, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType } from "tradeorders/schema";
-import { BitFinex } from "../bitfinex";
-
-
-const exchange = new BitFinex(process.env.API_KEY, process.env.API_SECRET);
+import exchange from './test-client.ts';
 
 
 exchange.getSubmittedOrder = (id: number): Promise<Order | null> => Promise.resolve(new Order());
