@@ -32,3 +32,7 @@ Todos:
  [x] cancel all orders
  [x] check order
  [x] market order and other types of order
+  * enforce/implement order direction
+  * implement "time in force" in orders
+  * enforce/implement quantity unit
+  * implement candle fetches for complete usability on trading bot
