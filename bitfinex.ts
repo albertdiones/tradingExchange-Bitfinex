@@ -31,7 +31,7 @@ export class BitFinex implements OrderHandler {
         this.nonce = Date.now();
     }
 
-    _createCredentials(urlPath:string, body?: {[key:string]: any}) {
+    _createHeaders(urlPath:string, body?: {[key:string]: any}) {
    
         const nonce:string = (this.nonce++).toString() + "" + Math.ceil(Math.random()*1000).toString();
         const payload = body ? JSON.stringify(body) : '';
@@ -40,6 +40,8 @@ export class BitFinex implements OrderHandler {
         const signatureChain = '/api' + urlPath + nonce + payload;
     
         return {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'bfx-nonce': nonce,
             'bfx-apikey': this.apiKey,
             'bfx-signature': crypto
@@ -55,11 +57,7 @@ export class BitFinex implements OrderHandler {
     
         const requestBody = {};
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...this._createCredentials(urlPath, requestBody)
-        }
+        const headers = this._createHeaders(urlPath, requestBody);
     
         return fetch(url, {
             method: 'POST',
@@ -124,11 +122,7 @@ export class BitFinex implements OrderHandler {
             requestBody.price = order.price1?.toString()
         }
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...this._createCredentials(urlPath, requestBody)
-        }
+        const headers = this._createHeaders(urlPath, requestBody);
     
         return fetch(url, {
             method: 'POST',
@@ -238,11 +232,8 @@ export class BitFinex implements OrderHandler {
             id: parseInt(order.external_id)
         };
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...this._createCredentials(urlPath, requestBody)
-        }
+
+        const headers = this._createHeaders(urlPath, requestBody);
     
         return fetch(url, {
             method: 'POST',
@@ -278,11 +269,7 @@ export class BitFinex implements OrderHandler {
         const urlPath = '/v2/auth/r/orders';
         const url = `${BitFinex.baseUrl}${urlPath}`;
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...this._createCredentials(urlPath)
-        }
+        const headers = this._createHeaders(urlPath);
     
         return fetch(url, {
             method: 'POST',
@@ -303,11 +290,8 @@ export class BitFinex implements OrderHandler {
 
         const requestBody = {};
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...this._createCredentials(urlPath, requestBody)
-        }
+ 
+        const headers = this._createHeaders(urlPath, requestBody);
     
         return fetch(url, {
             method: 'POST',
@@ -326,11 +310,7 @@ export class BitFinex implements OrderHandler {
         const urlPath = '/v2/auth/r/orders/hist';
         const url = `${BitFinex.baseUrl}${urlPath}`;
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...this._createCredentials(urlPath)
-        }
+        const headers = this._createHeaders(urlPath);
     
         return fetch(url, {
             method: 'POST',
