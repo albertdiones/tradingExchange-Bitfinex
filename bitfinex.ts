@@ -60,6 +60,7 @@ export class BitFinex implements OrderHandler {
             body: JSON.stringify(body),
             headers: this._createHeaders(urlPath, body)
         })
+        .then((response) => response.json())
         .catch((error) => {
             console.error('Error:', error);
             throw error;
@@ -68,7 +69,6 @@ export class BitFinex implements OrderHandler {
 
     fetchWallet(): Array<[string, string, number, number, number, string, object]> {    
         return this._fetch('/v2/auth/r/wallets', {})
-        .then((response) => response.json())
         .then((result) => {
             if (result[0] === 'error') {
                 throw 'error on fetching wallet'
@@ -121,7 +121,6 @@ export class BitFinex implements OrderHandler {
         }
 
         return this._fetch('/v2/auth/w/order/submit', requestBody)
-            .then((response) => response.json())
             .then((result) => {
                 if (result[0] === 'error') {
                     console.error(result);
@@ -233,7 +232,6 @@ export class BitFinex implements OrderHandler {
         };
     
         return this._fetch('/v2/auth/w/order/cancel', requestBody)
-        .then((response) => response.json())
         .then((result) => {
             console.log(result);
             if (result[0] === 'error') {
@@ -261,7 +259,6 @@ export class BitFinex implements OrderHandler {
     async getOrdersFromExchange(): Promise<Array<any>> {
     
         return this._fetch('/v2/auth/r/orders')
-        .then((response) => response.json())
         .catch((error) => {
             console.error('Error:', error);
             throw error;
@@ -274,7 +271,6 @@ export class BitFinex implements OrderHandler {
         const urlPath = `/v2/auth/r/order/${order.symbol}:${order.external_id}/trades`;
          
         return this._fetch(urlPath, {})
-        .then((response) => response.json())
         .catch((error) => {
             console.error('Error:', error);
             throw error;
@@ -286,7 +282,6 @@ export class BitFinex implements OrderHandler {
         const urlPath = '/v2/auth/r/orders/hist';
     
         return this._fetch(urlPath, {})
-            .then((response) => response.json())
             .catch((error) => {
                 console.error('Error:', error);
                 throw error;
