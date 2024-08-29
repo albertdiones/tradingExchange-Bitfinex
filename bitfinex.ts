@@ -1,7 +1,7 @@
 import { type OrderHandler } from 'tradeorders/orderHandler'
 import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType, type SubmittedOrder } from 'tradeorders/schema';
 import crypto from 'crypto';
-import HttpClient from 'nonChallantJs';
+import HttpClient from 'nonChalantJs';
 
 export class BitFinex implements OrderHandler {
 

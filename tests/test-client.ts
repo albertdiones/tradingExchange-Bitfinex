@@ -1,4 +1,4 @@
-import HttpClient from "nonChallantJs";
+import HttpClient from "nonChalantJs";
 import { BitFinex } from "../bitfinex";
 
 
