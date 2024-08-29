@@ -129,10 +129,6 @@ export class BitFinex implements OrderHandler {
                 order.external_id = result[4][0][0];
                 return this.saveOrder(order);
             })
-            .catch((error) => {
-                console.error('Error:', error);
-                throw error;
-            });
     }
 
     getSubmittedOrder = (id: number): Order | null => {
@@ -242,10 +238,6 @@ export class BitFinex implements OrderHandler {
             order.status = OrderStatus.CANCELLED;
             return this.saveOrder(order);
         })
-        .catch((error) => {
-            console.error('Error:', error);
-            throw error;
-        });
     }
 
     getSubmittedOrders = () => this.getOrdersFromExchange().then((result) => {
@@ -258,11 +250,7 @@ export class BitFinex implements OrderHandler {
 
     async getOrdersFromExchange(): Promise<Array<any>> {
     
-        return this._fetch('/v2/auth/r/orders')
-        .catch((error) => {
-            console.error('Error:', error);
-            throw error;
-        });
+        return this._fetch('/v2/auth/r/orders');
     }
 
     
@@ -270,22 +258,14 @@ export class BitFinex implements OrderHandler {
     async getTradeOrdersFromExchange(order: Order): Promise<Array<any>> {
         const urlPath = `/v2/auth/r/order/${order.symbol}:${order.external_id}/trades`;
          
-        return this._fetch(urlPath, {})
-        .catch((error) => {
-            console.error('Error:', error);
-            throw error;
-        });
+        return this._fetch(urlPath, {});
     }
 
     
     async getOrderHistoryFromExchange(): Promise<Array<any>> {
         const urlPath = '/v2/auth/r/orders/hist';
     
-        return this._fetch(urlPath, {})
-            .catch((error) => {
-                console.error('Error:', error);
-                throw error;
-            });
+        return this._fetch(urlPath, {});
     }
 
     async cancelAllOrders(): Promise<Order[]> {
