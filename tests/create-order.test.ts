@@ -61,7 +61,7 @@ test('create order check and cancel', async () => {
 
     expect(exchangeOrder?.submission_timestamp).not.toBeFalsy();
 
-    await Bun.sleep(2000);
+    await Bun.sleep(500);
 
     await exchange.cancelOrder(order);
 

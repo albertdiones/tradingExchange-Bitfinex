@@ -39,7 +39,7 @@ export class BitFinex implements OrderHandler {
         if (options?.client) {
             this.client = options.client;
         }
-        this.logger = logger;
+        this.logger = options.logger;
     }
 
     _createHeaders(urlPath:string, body?: {[key:string]: any}) {
@@ -189,53 +189,9 @@ export class BitFinex implements OrderHandler {
                     throw 'not on the db';
                 }
 
-                const exchangeStatus: string = submittedOrder[13];
+                
 
-                let statusKey = exchangeStatus;
-                if (exchangeStatus.startsWith('EXECUTED')) {
-                    statusKey = 'EXECUTED';
-                }
-
-                dbOrder.status = BitFinex.orderStatuses[statusKey] ?? 'unknown';
-
-                if ([OrderStatus.FILLED].includes(dbOrder.status)) {
-                    // could be improved, use the last(or first?) trade's timestamp as execution
-                    dbOrder.execution_timestamp = Date.now();
-                }
-
-                if (!dbOrder.submission_timestamp) {
-                    dbOrder.submission_timestamp = submittedOrder[4];
-                }
-
-                // @todo update trades accordingly
-
-                return this.getTradeOrdersFromExchange(dbOrder)
-                    .then(
-                        (trades: Array<Array<any>>) => {
-
-                            console.log('trades', trades);
-
-                            if (trades.length <= 0) {
-                                return dbOrder;
-                            }
-
-                            dbOrder.trades = trades.map(
-                                (trade) => {
-                                    return trade;
-                                }
-                            );
-
-                            if (dbOrder.price1 === null) {
-                                const lastTrade = trades[trades.length-1];
-                                dbOrder.price1 = lastTrade[5];
-                            }
-
-                            return dbOrder;
-                        }
-                    )
-                    .then(
-                        (order) => this.saveOrder(dbOrder)
-                    )
+                return this.syncOrder(submittedOrder, dbOrder);
             }
         )
     }
@@ -309,6 +265,54 @@ export class BitFinex implements OrderHandler {
                     )
                 )
             );
+    }
+
+    syncOrder(exchangeOrder: Array<any>, dbOrder: Order): Promise<Order> {
+        const exchangeStatus: string = exchangeOrder[13];
+
+        let statusKey = exchangeStatus;
+        if (exchangeStatus.startsWith('EXECUTED')) {
+            statusKey = 'EXECUTED';
+        }
+
+        dbOrder.status = BitFinex.orderStatuses[statusKey] ?? 'unknown';
+
+        if ([OrderStatus.FILLED].includes(dbOrder.status)) {
+            // could be improved, use the last(or first?) trade's timestamp as execution
+            dbOrder.execution_timestamp = Date.now();
+        }
+
+        if (!dbOrder.submission_timestamp) {
+            dbOrder.submission_timestamp = exchangeOrder[4];
+        }
+
+        return this.getTradeOrdersFromExchange(dbOrder)
+        .then(
+            (trades: Array<Array<any>>) => {
+
+                console.log('trades', trades);
+
+                if (trades.length <= 0) {
+                    return dbOrder;
+                }
+
+                dbOrder.trades = trades.map(
+                    (trade) => {
+                        return trade;
+                    }
+                );
+
+                if (dbOrder.price1 === null) {
+                    const lastTrade = trades[trades.length-1];
+                    dbOrder.price1 = lastTrade[5];
+                }
+
+                return dbOrder;
+            }
+        )
+        .then(
+            (order) => this.saveOrder(dbOrder)
+        );
     }
 
 }
