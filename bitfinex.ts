@@ -2,6 +2,7 @@ import { type OrderHandler } from 'tradeorders/orderHandler'
 import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType, type SubmittedOrder } from 'tradeorders/schema';
 import crypto from 'crypto';
 import HttpClient from 'nonChalantJs';
+import {type LoggerInterface, Logger} from 'add_logger';
 
 export class BitFinex implements OrderHandler {
 
@@ -28,13 +29,17 @@ export class BitFinex implements OrderHandler {
 
     client: HttpClient | undefined;
 
-    constructor(apiKey: string, apiSecret: string, options?:  {client: HttpClient}) {
+    logger: LoggerInterface;
+
+    constructor(apiKey: string, apiSecret: string, options?:  {client: HttpClient, logger?: LoggerInterface }) {
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.nonce = Date.now();
+
         if (options?.client) {
             this.client = options.client;
-        }        
+        }
+        this.logger = logger;
     }
 
     _createHeaders(urlPath:string, body?: {[key:string]: any}) {
@@ -63,7 +68,7 @@ export class BitFinex implements OrderHandler {
 
         const headers = this._createHeaders(urlPath, body);
 
-        console.log('bfx-nonce', headers['bfx-nonce']);
+        this.logger?.log('bfx-nonce', headers['bfx-nonce']);
 
         return this.client.post(url, {
             method: 'POST',
@@ -75,6 +80,9 @@ export class BitFinex implements OrderHandler {
                 if (result[0] === 'error') {
                     throw `error on fetching ${urlPath} ${JSON.stringify(result)}`
                 }
+
+                this.logger?.debug(urlPath, result);
+
                 return result;
             }
         )
@@ -168,14 +176,14 @@ export class BitFinex implements OrderHandler {
             }
         )
         .then(
-            (submittedOrder: Array<any>) => {             
+            async (submittedOrder: Array<any>) => {             
 
                 console.log('checkOrder() result', submittedOrder);
                 if (!submittedOrder) {
                     return;
                 }
 
-                const dbOrder = this.getSubmittedOrder(Number.parseInt(submittedOrder[0]));
+                const dbOrder = await this.getSubmittedOrder(Number.parseInt(submittedOrder[0]));
 
                 if (!dbOrder) {
                     throw 'not on the db';
@@ -193,6 +201,10 @@ export class BitFinex implements OrderHandler {
                 if ([OrderStatus.FILLED].includes(dbOrder.status)) {
                     // could be improved, use the last(or first?) trade's timestamp as execution
                     dbOrder.execution_timestamp = Date.now();
+                }
+
+                if (!dbOrder.submission_timestamp) {
+                    dbOrder.submission_timestamp = submittedOrder[4];
                 }
 
                 // @todo update trades accordingly
