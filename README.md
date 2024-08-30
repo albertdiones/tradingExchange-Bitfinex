@@ -36,6 +36,6 @@ Todos:
  [x] enforce/implement quantity unit
  [x] make the code the dry-er
  [x] implement xhrjson(nonChalantJs) http client
-  * create automated tests (using jest)
+ [x] create automated tests (using jest)
   * implement "time in force" in orders
   * implement candle fetches for complete usability on trading bot

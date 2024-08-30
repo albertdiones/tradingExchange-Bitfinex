@@ -109,6 +109,10 @@ export class BitFinex implements OrderHandler {
             throw "Invalid quantity";
         }
 
+        if (order.external_id !== null) {
+            throw "Resubmission of an existing order";
+        }
+
         let orderQuantity:number;
         if (order.direction === OrderDirection.SHORT) {
             orderQuantity = -order.quantity.quantity;
@@ -313,6 +317,33 @@ export class BitFinex implements OrderHandler {
         .then(
             (order) => this.saveOrder(dbOrder)
         );
+    }
+
+    getActiveOrders(): Promise<Order[]> {
+        return this.getOrdersFromExchange().then(
+            (result) => {
+                return Promise.all(
+                    result.map(
+                        (exchangeOrder: Array<any>) => {
+                            return this.getSubmittedOrder(exchangeOrder[0]).then(
+                                (dbOrder: Order | null) => {
+                                    if (!dbOrder) {
+                                        return null;
+                                    }
+                                    return this.syncOrder(exchangeOrder, dbOrder);
+                                }
+                            );
+                        }
+                    )
+                ).then(
+                    (orders): Order[] => {
+                        return orders.filter(
+                            (order): order is Order => Boolean(order)
+                        )
+                    }
+                )
+            }
+        )
     }
 
 }
