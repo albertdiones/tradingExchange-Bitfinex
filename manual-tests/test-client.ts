@@ -15,11 +15,16 @@ export class CacheViaNothing {
     }
 }
 
-export default new BitFinex(process.env.API_KEY, process.env.API_SECRET, {
-    client: new HttpClient({
-        logger: console,
-        cache: new CacheViaNothing(),
-        minTimeoutPerRequest: 500,
-        maxRandomPreRequestTimeout: 0,
-    })
-});
+export default new BitFinex(
+    process.env.API_KEY,
+    process.env.API_SECRET, 
+    {
+        client: new HttpClient({
+            logger: console,
+            cache: new CacheViaNothing(),
+            minTimeoutPerRequest: 500,
+            maxRandomPreRequestTimeout: 0,
+        }),
+        logger: console
+    }
+);

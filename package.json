@@ -3,7 +3,9 @@
   "module": "bitfinex.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "dotenv": "^16.4.5",
+    "@types/bun": "latest",
+    "jest": "^29.7.0"
   },
   "peerDependencies": {
     "typescript": "^5.5.4"
@@ -11,5 +13,8 @@
   "dependencies": {
     "nonChalantJs": "https://github.com/albertdiones/nonChalant.git",
     "tradeorders": "https://github.com/albertdiones/tradeOrders.git"
+  },
+  "jest": {
+    "setupFiles": ["./test-setup.ts"]
   }
 }
