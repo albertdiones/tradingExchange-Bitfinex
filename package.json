@@ -15,7 +15,7 @@
     "tradeorders": "https://github.com/albertdiones/tradeOrders.git"
   },
   "jest": {
-    "setupFiles": ["./test-setup.ts"],
+    "setupFiles": ["./test.setup.ts"],
     "testTimeout": 20000
   }
 }
