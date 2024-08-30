@@ -46,10 +46,10 @@ test('create order check and cancel', async () => {
         {
             instrument_type: 'spot',
             symbol: symbol,
-            direction: OrderDirection.LONG,
+            direction: OrderDirection.SHORT,
             status: OrderStatus.PENDING,
             type: OrderType.LIMIT,
-            price1: process.env.TEST_ORDER_BUY_PRICE,
+            price1: process.env.TEST_ORDER_SELL_PRICE,
             quantity: {
                 quantity: process.env.TEST_ORDER_QUANTITY,
                 unit: process.env.TEST_ORDER_QUANTITY_UNIT
@@ -114,6 +114,9 @@ test('create order check and cancel', async () => {
 
         // Assuming you want to check if the count is not 3
         expect(orders.length).toBe(3);
+
+
+        expect(orders.filter(order => order.direction === OrderDirection.SHORT).length).toBe(1);
     
         await Bun.sleep(2000);
     

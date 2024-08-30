@@ -274,6 +274,13 @@ export class BitFinex implements OrderHandler {
     syncOrder(exchangeOrder: Array<any>, dbOrder: Order): Promise<Order> {
         const exchangeStatus: string = exchangeOrder[13];
 
+        if (exchangeOrder[6] > 0) {
+            dbOrder.direction = OrderDirection.LONG;
+        }
+        else if (exchangeOrder[6] < 0) {
+            dbOrder.direction = OrderDirection.SHORT;
+        }
+
         let statusKey = exchangeStatus;
         if (exchangeStatus.startsWith('EXECUTED')) {
             statusKey = 'EXECUTED';
