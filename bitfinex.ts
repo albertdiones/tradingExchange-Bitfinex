@@ -93,6 +93,46 @@ export class BitFinex implements OrderHandler, AssetWallet {
         });
     }
 
+    getSupportedAssets(): Promise<string[]> {
+        return this.client?.getWithCache(
+            `${BitFinex.baseUrl}/v2/tickers?symbols=ALL`
+        )
+        .then(
+            ({response}) => {
+                const symbols: string[] = response.map(
+                    (tickerResponse: [string, number]) => {
+                        return tickerResponse[0];
+                    }
+                );
+
+                const usdSymbols = symbols.filter(
+                    (symbol) => symbol.endsWith('USD')
+                );
+
+                const validSymbols = usdSymbols.filter(
+                    (symbol) => !symbol.startsWith('tTEST') && !symbol.startsWith('f')
+                );
+
+                const baseAssets = validSymbols.map(
+                    (symbol) => this._getSymbolAsset(symbol)
+                );
+
+                return Array.from(new Set([...baseAssets])) ?? [];
+            }
+        );
+    }
+
+    _getBaseAsset(symbol: string): string {
+        return symbol.replace(/\:?USD$/,'').replace(/^t/,'');
+    }
+    
+
+    // @deprecated use _getBaseAsset(symbol)
+    _getSymbolAsset(symbol: string): string {
+        return this._getBaseAsset(symbol);
+    }
+    
+
     getHoldings(): Promise<AssetHolding[]> {
         return this.fetchWallet()
             .then(
@@ -113,11 +153,6 @@ export class BitFinex implements OrderHandler, AssetWallet {
             return result;
         });
     }
-
-    _getSymbolAsset(symbol: string): string {
-        return symbol.substring(1).replace(/USD$/,'');
-    }
-    
     async submitOrder(order: Order): Promise<Order | void> {
 
         if (order.quantity.quantity <= 0) {
