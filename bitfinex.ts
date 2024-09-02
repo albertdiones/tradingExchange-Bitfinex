@@ -144,18 +144,25 @@ export class BitFinex implements OrderHandler, AssetWallet {
 
             const holdings = await this.getHoldings();
 
-            const wallet = await this.fetchWallet();
-            const assetHolding = holdings.find(
-                (holding: AssetHolding) => {
-                    return holding.name === this._getSymbolAsset(order.symbol);
-                }
-            );
-
-            if (!assetHolding) {
-                throw `No holdings found for ${order.symbol} order`;
+            if (order.direction === OrderDirection.LONG ) {
+                const assetHolding = holdings.find(
+                    (holding: AssetHolding) => {
+                        return holding.name === 'USD';
+                    }
+                );
+                orderQuantity = ((orderQuantity/100)*assetHolding.amount)/order.price1;
             }
-
-            orderQuantity = (orderQuantity/100)*assetHolding.amount;
+            else if (order.direction === OrderDirection.SHORT) {
+                const assetHolding = holdings.find(
+                    (holding: AssetHolding) => {
+                        return holding.name === this._getSymbolAsset(order.symbol);
+                    }
+                );
+                orderQuantity = (orderQuantity/100)*assetHolding.amount;
+            }
+            else {
+                throw "Unknown direction";
+            }            
         }
 
         const requestBody = {
