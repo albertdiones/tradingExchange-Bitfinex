@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "nonChalantJs": "https://github.com/albertdiones/nonChalant.git",
+    "tradeexchanges": "https://github.com/albertdiones/tradeExchanges.git",
     "tradeorders": "https://github.com/albertdiones/tradeOrders.git"
   },
   "jest": {

@@ -1,5 +1,5 @@
 import {describe, expect, test} from '@jest/globals';
-import { Order, OrderDirection, OrderStatus, OrderType } from 'tradeorders/schema';
+import { Order, OrderDirection, OrderStatus, OrderType, OrderQuantityUnit } from 'tradeorders/schema';
 import exchange from '../manual-tests/test-client.ts';
 
 const symbol = process.env.TEST_ORDER_SYMBOL;
@@ -61,13 +61,13 @@ test('create order check and cancel', async () => {
         {
             instrument_type: 'spot',
             symbol: symbol,
-            direction: OrderDirection.LONG,
+            direction: OrderDirection.SHORT,
             status: OrderStatus.PENDING,
             type: OrderType.LIMIT,
-            price1: process.env.TEST_ORDER_BUY_PRICE,
+            price1: process.env.TEST_ORDER_SELL_PRICE,
             quantity: {
-                quantity: process.env.TEST_ORDER_QUANTITY,
-                unit: process.env.TEST_ORDER_QUANTITY_UNIT
+                quantity: process.env.TEST_SELL_ORDER_PERCENTAGE_QUANTITY,
+                unit: OrderQuantityUnit.PERCENT
             },
         }
     );
@@ -116,7 +116,7 @@ test('create order check and cancel', async () => {
         expect(orders.length).toBe(3);
 
 
-        expect(orders.filter(order => order.direction === OrderDirection.SHORT).length).toBe(1);
+        expect(orders.filter(order => order.direction === OrderDirection.SHORT).length).toBe(2);
     
         await Bun.sleep(2000);
     

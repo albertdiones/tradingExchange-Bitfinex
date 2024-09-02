@@ -3,8 +3,9 @@ import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderQuantityUnit, OrderStatus
 import crypto from 'crypto';
 import HttpClient from 'nonChalantJs';
 import {type LoggerInterface, Logger} from 'add_logger';
+import type { AssetHolding, AssetWallet } from 'tradeexchanges';
 
-export class BitFinex implements OrderHandler {
+export class BitFinex implements OrderHandler, AssetWallet {
 
     static baseUrl = 'https://api.bitfinex.com';
 
@@ -92,7 +93,21 @@ export class BitFinex implements OrderHandler {
         });
     }
 
-    fetchWallet(): Array<[string, string, number, number, number, string, object]> {    
+    getHoldings(): Promise<AssetHolding[]> {
+        return this.fetchWallet()
+            .then(
+                (results) => results.map(
+                    (resultAsset) => (
+                        {
+                            name: resultAsset[1], 
+                            amount: resultAsset[2]
+                        }
+                    )
+                )
+            )
+    }
+
+    fetchWallet(): Promise<Array<[string, string, number, number, number, string, object]>> {    
         return this._fetch('/v2/auth/r/wallets', {})
         .then((result) => {
             return result;
@@ -126,14 +141,21 @@ export class BitFinex implements OrderHandler {
         }
 
         if (order.quantity.unit === OrderQuantityUnit.PERCENT) {
+
+            const holdings = await this.getHoldings();
+
             const wallet = await this.fetchWallet();
-            const baseCurrencyBalance = wallet.find(
-                (currency: [string, string, number, number]) => {
-                    return currency[1] === this._getSymbolAsset(order.symbol);
+            const assetHolding = holdings.find(
+                (holding: AssetHolding) => {
+                    return holding.name === this._getSymbolAsset(order.symbol);
                 }
             );
 
-            orderQuantity = (orderQuantity/100)*baseCurrencyBalance[2];
+            if (!assetHolding) {
+                throw `No holdings found for ${order.symbol} order`;
+            }
+
+            orderQuantity = (orderQuantity/100)*assetHolding.amount;
         }
 
         const requestBody = {
