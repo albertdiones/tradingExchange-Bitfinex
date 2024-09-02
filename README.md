@@ -37,5 +37,7 @@ Todos:
  [x] make the code the dry-er
  [x] implement xhrjson(nonChalantJs) http client
  [x] create automated tests (using jest)
+ [x] implement AssetWallet interface
   * implement "time in force" in orders
-  * implement candle fetches for complete usability on trading bot
+  * implement TickerFetcher interface or it's future equivalent
+  * implement priceCandleFetcher or it's future equivalent
