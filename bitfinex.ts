@@ -3,9 +3,10 @@ import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderQuantityUnit, OrderStatus
 import crypto from 'crypto';
 import HttpClient from 'nonChalantJs';
 import {type LoggerInterface, Logger} from 'add_logger';
-import type { AssetHolding, AssetWallet } from 'tradeexchanges';
+import type { AssetHolding, AssetWallet, TickerFetcher } from 'tradeexchanges';
+import type { TickerData } from 'tradeexchanges/tradingCandles';
 
-export class BitFinex implements OrderHandler, AssetWallet {
+export class BitFinex implements OrderHandler, AssetWallet, TickerFetcher {
 
     static baseUrl = 'https://api.bitfinex.com';
 
@@ -93,8 +94,12 @@ export class BitFinex implements OrderHandler, AssetWallet {
         });
     }
 
-    getSupportedAssets(): Promise<string[]> {
-        return this.client?.getWithCache(
+    
+    getTickerSymbols(): Promise<string[]> {
+        if (!this.client) {
+            return Promise.resolve([]);
+        }
+        return this.client.getWithCache(
             `${BitFinex.baseUrl}/v2/tickers?symbols=ALL`
         )
         .then(
@@ -112,8 +117,21 @@ export class BitFinex implements OrderHandler, AssetWallet {
                 const validSymbols = usdSymbols.filter(
                     (symbol) => !symbol.startsWith('tTEST') && !symbol.startsWith('f')
                 );
+                return validSymbols;
+            }
+        );
+    }
 
-                const baseAssets = validSymbols.map(
+    getAssetDefaultTickerSymbol(baseAsset: string): string | null {
+        return `t${baseAsset}USD`
+    }
+
+    getSupportedAssets(): Promise<string[]> {
+        return this.getTickerSymbols().
+            then(
+                (symbols: string[]) => {
+
+                const baseAssets = symbols.map(
                     (symbol) => this._getSymbolAsset(symbol)
                 );
 
