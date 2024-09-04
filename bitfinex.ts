@@ -126,6 +126,34 @@ export class BitFinex implements OrderHandler, AssetWallet, TickerFetcher {
         return `t${baseAsset}USD`
     }
 
+    getTickerData(symbol: string): Promise<{ data: TickerData; fromCache: Boolean; } | null> {
+        if (!this.client) {
+            return Promise.resolve(null);
+        }
+        return this.client.getWithCache(
+            `${BitFinex.baseUrl}/v2/tickers?symbols=ALL`
+        ).then(
+            ({response, fromCache}) => {
+                const ticker = response.find(
+                    (ticker: [string]) => ticker[0] === symbol
+                );
+
+                return {
+                    data: {
+                        symbol: ticker[0],
+                        current: ticker[7],
+                        high: ticker[9],
+                        low: ticker[10],
+                        base_volume: ticker[8],
+                        quote_volume: 0,
+                        full_data: ticker
+                    },
+                    fromCache: fromCache
+                }
+            }
+        );
+    }
+
     getSupportedAssets(): Promise<string[]> {
         return this.getTickerSymbols().
             then(
