@@ -39,5 +39,5 @@ Todos:
  [x] create automated tests (using jest)
  [x] implement AssetWallet interface
   * implement "time in force" in orders
-  * implement TickerFetcher interface or it's future equivalent
+ [x] implement TickerFetcher interface or it's future equivalent
   * implement priceCandleFetcher or it's future equivalent
