@@ -38,6 +38,6 @@ Todos:
  [x] implement xhrjson(nonChalantJs) http client
  [x] create automated tests (using jest)
  [x] implement AssetWallet interface
-  * implement "time in force" in orders
  [x] implement TickerFetcher interface or it's future equivalent
+  * implement "time in force" in orders
   * implement priceCandleFetcher or it's future equivalent
