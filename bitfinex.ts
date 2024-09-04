@@ -145,7 +145,7 @@ export class BitFinex implements OrderHandler, AssetWallet, TickerFetcher {
                         high: ticker[9],
                         low: ticker[10],
                         base_volume: ticker[8],
-                        quote_volume: 0,
+                        quote_volume: ticker[8]*ticker[7],
                         full_data: ticker
                     },
                     fromCache: fromCache

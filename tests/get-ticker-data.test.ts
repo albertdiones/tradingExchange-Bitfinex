@@ -14,16 +14,19 @@ test('get BTC ticker data from BitFinex', async () => {
 
     expect(symbol).not.toBeNull();
 
-    const priceData = await exchange.getTickerData(symbol as string);
+    const response = await exchange.getTickerData(symbol as string);
+
+    expect(response).not.toBeFalsy();
+
+    const priceData = response?.data;
 
     expect(priceData).not.toBeFalsy();
-
-    expect(priceData?.data).not.toBeFalsy();
-    expect(priceData?.data?.current).not.toBeFalsy();
+    expect(priceData?.current).not.toBeFalsy();
+    expect(priceData?.quote_volume).not.toBeFalsy();
 
     const alternativeSourcePrice = parseFloat(await cryptoPrice('BTC'));
     
-    const exchangePrice = priceData?.data.current*1;
+    const exchangePrice = priceData?.current*1;
 
     expect(exchangePrice).toBeGreaterThanOrEqual(alternativeSourcePrice * 0.995);
     expect(exchangePrice).toBeLessThanOrEqual(alternativeSourcePrice * 1.005);
