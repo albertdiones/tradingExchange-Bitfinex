@@ -44,3 +44,16 @@ test('get XRP 1d candles from BitFinex', async () => {
     
     expect(candles?.length).toBe(limit);
 });
+
+
+
+test('get XRP 1d candles from BitFinex', async () => {
+    const limit = 300;
+    const candles: TickerCandle[] | null  = await exchange.fetchCandles('tXRPUSD', 10080,limit);
+    
+    expect(candles).not.toBeNull();
+    
+    expect(candles?.length).toBe(limit);
+
+    console.log('oldest candle close', candles[limit-1]);
+});
