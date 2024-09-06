@@ -471,8 +471,11 @@ export class BitFinex implements Exchange,CandleFetcher {
     }
 
     async fetchCandles(symbol: string, minutes: number, limit: number): Promise<TickerCandle[] | null> {
+        const interval = this.minutesToInterval(minutes);
+        const url = `${BitFinex.baseUrl}/v2/candles/trade:${interval}:${symbol}/hist?limit=${limit}`;
+        console.log('fetchCandles url', url);
         return this.client.getNoCache(
-            `${BitFinex.baseUrl}/v2/candles/trade%3A${minutes}m%3A${symbol}/hist?limit=${limit}`
+            url
         ).then(
             (result) => {
 
@@ -490,6 +493,44 @@ export class BitFinex implements Exchange,CandleFetcher {
                 );
             }
         );
+    }
+
+    minutesToInterval(minutes: number): string {
+        switch (minutes) {
+            case 1:
+            case 5:
+            case 15:
+            case 30:
+                return `${minutes}m`
+                break;
+
+            case 60:
+            case 180:
+            case 360:
+            case 720:
+                return `${minutes/60}h`
+                break;
+
+            case 1440:
+                return '1D'
+                break;
+
+            case 10080:
+                return '1W';
+                break;
+            
+            case 20160:
+                return '14D';
+                break;
+            
+            case 43200:
+                return '1M' 
+                break;
+
+            default:
+                throw `Unsupported interval: ${minutes}`;
+        }
+        
     }
 
 }

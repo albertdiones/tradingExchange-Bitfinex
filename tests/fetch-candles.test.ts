@@ -34,3 +34,13 @@ test('get MATIC candles from BitFinex', async () => {
     expect(candles[0].close).toBeGreaterThanOrEqual(floorPrice);
     expect(candles[0].close).toBeLessThanOrEqual(ceilingPrice);
 });
+
+
+test('get XRP 1d candles from BitFinex', async () => {
+    const limit = 14;
+    const candles: TickerCandle[] | null  = await exchange.fetchCandles('tXRPUSD', 1440,limit);
+    
+    expect(candles).not.toBeNull();
+    
+    expect(candles?.length).toBe(limit);
+});
