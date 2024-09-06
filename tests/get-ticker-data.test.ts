@@ -27,9 +27,13 @@ test('get BTC ticker data from BitFinex', async () => {
     const alternativeSourcePrice = parseFloat(await cryptoPrice('BTC'));
     
     const exchangePrice = priceData?.current*1;
+    
+    const tolerance = parseFloat(process.env.TEST_PRICE_CHECK_TOLERANCE);
+    const ceilingPrice = alternativeSourcePrice*(1+tolerance);
+    const floorPrice = alternativeSourcePrice*(1-tolerance);
 
-    expect(exchangePrice).toBeGreaterThanOrEqual(alternativeSourcePrice * 0.995);
-    expect(exchangePrice).toBeLessThanOrEqual(alternativeSourcePrice * 1.005);
+    expect(exchangePrice).toBeGreaterThanOrEqual(floorPrice);
+    expect(exchangePrice).toBeLessThanOrEqual(ceilingPrice);
 
     console.log(exchangePrice, alternativeSourcePrice);
 });
