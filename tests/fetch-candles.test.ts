@@ -11,13 +11,14 @@ async function cryptoPrice(asset: string): Promise<string> {
 }
   
 test('get BTC candles from BitFinex', async () => {
-    const candles: TickerCandle[] | null = await exchange.fetchCandles('tBTCUSD', 5,1000);
+    const limit = 777;
+    const candles: TickerCandle[] | null = await exchange.fetchCandles('tBTCUSD', 5,limit);
     
     expect(candles).not.toBeNull();
-
-
-    /*
     
+    expect(candles?.length).toBe(limit);
+    /*
+
 
     const response = await exchange.getTickerData(symbol as string);
 
