@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import HttpClient from 'nonChalantJs';
 import {type LoggerInterface, Logger} from 'add_logger';
 import type { AssetHolding, AssetWallet, CandleFetcher, Exchange, TickerFetcher } from 'tradeexchanges';
-import type { TickerCandle, TickerData } from 'tradeexchanges/tradingCandles';
+import type { rawExchangeCandle, TickerCandle, TickerData } from 'tradeexchanges/tradingCandles';
 
 export class BitFinex implements Exchange,CandleFetcher {
 
@@ -493,6 +493,11 @@ export class BitFinex implements Exchange,CandleFetcher {
                 );
             }
         );
+    }
+
+    /** backwards compatibility with already running trading bot*/
+    async fetchCandlesFromExchange(symbol: string, minutes: number, limit: number): Promise<rawExchangeCandle[] | null> {
+        return this.fetchCandles(symbol, minutes, limit);
     }
 
     minutesToInterval(minutes: number): string {
