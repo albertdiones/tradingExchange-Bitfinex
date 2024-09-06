@@ -25,14 +25,25 @@ test('get MATIC candles from BitFinex', async () => {
 
     const alternativeSourcePrice = parseFloat(await cryptoPrice('MATIC'));
 
-    expect(candles[0].open_timestamp).toBeGreaterThan(candles[776].open_timestamp);
+    const currentCandle = candles[0];
+
+    expect(currentCandle.open_timestamp).toBeGreaterThan(candles[776].open_timestamp);
     
     const tolerance = parseFloat(process.env.TEST_PRICE_CHECK_TOLERANCE);
     const ceilingPrice = alternativeSourcePrice*(1+tolerance);
     const floorPrice = alternativeSourcePrice*(1-tolerance);
 
-    expect(candles[0].close).toBeGreaterThanOrEqual(floorPrice);
-    expect(candles[0].close).toBeLessThanOrEqual(ceilingPrice);
+    expect(currentCandle.close).toBeGreaterThanOrEqual(floorPrice);
+    expect(currentCandle.close).toBeLessThanOrEqual(ceilingPrice);
+
+
+    const olderCandle = candles[1];
+
+    expect(olderCandle.close_timestamp+1).toBe(currentCandle.open_timestamp);
+
+
+    expect(candles[2].close_timestamp+1).toBe(olderCandle.open_timestamp);
+    
 });
 
 
