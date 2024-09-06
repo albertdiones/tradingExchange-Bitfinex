@@ -473,7 +473,6 @@ export class BitFinex implements Exchange,CandleFetcher {
     async fetchCandles(symbol: string, minutes: number, limit: number): Promise<TickerCandle[] | null> {
         const interval = this.minutesToInterval(minutes);
         const url = `${BitFinex.baseUrl}/v2/candles/trade:${interval}:${symbol}/hist?limit=${limit}`;
-        console.log('fetchCandles url', url);
         return this.client.getNoCache(
             url
         ).then(
