@@ -3,10 +3,10 @@ import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderQuantityUnit, OrderStatus
 import crypto from 'crypto';
 import HttpClient from 'nonChalantJs';
 import {type LoggerInterface, Logger} from 'add_logger';
-import type { AssetHolding, AssetWallet, TickerFetcher } from 'tradeexchanges';
-import type { TickerData } from 'tradeexchanges/tradingCandles';
+import type { AssetHolding, AssetWallet, CandleFetcher, Exchange, TickerFetcher } from 'tradeexchanges';
+import type { TickerCandle, TickerData } from 'tradeexchanges/tradingCandles';
 
-export class BitFinex implements OrderHandler, AssetWallet, TickerFetcher {
+export class BitFinex implements Exchange,CandleFetcher {
 
     static baseUrl = 'https://api.bitfinex.com';
 
@@ -29,19 +29,26 @@ export class BitFinex implements OrderHandler, AssetWallet, TickerFetcher {
 
     nonce:number = 0;
 
-    client: HttpClient | undefined;
+    client: HttpClient;
 
-    logger: LoggerInterface;
+    logger: LoggerInterface | undefined;
 
-    constructor(apiKey: string, apiSecret: string, options?:  {client: HttpClient, logger?: LoggerInterface }) {
+    constructor(
+        apiKey: string, 
+        apiSecret: string, 
+        client: HttpClient, 
+        options?:  {logger?: LoggerInterface }
+    ) {
+        if (!apiKey || !apiSecret || !client) {
+            throw "Missing required parameters";
+        }
+
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.nonce = Date.now();
+        this.client = client;
 
-        if (options?.client) {
-            this.client = options.client;
-        }
-        this.logger = options.logger;
+        this.logger = options?.logger;
     }
 
     _createHeaders(urlPath:string, body?: {[key:string]: any}) {
@@ -461,6 +468,28 @@ export class BitFinex implements OrderHandler, AssetWallet, TickerFetcher {
                 )
             }
         )
+    }
+
+    async fetchCandles(symbol: string, minutes: number, limit: number): Promise<TickerCandle[] | null> {
+        return this.client.getNoCache(
+            `${BitFinex.baseUrl}/v2/candles/trade%3A${minutes}m%3A${symbol}/hist?limit=${limit}`
+        ).then(
+            (result) => {
+
+                return result.map(
+                    (resultCandle:[number, number, number, number, number, number]): TickerCandle => ({
+                        open_timestamp: resultCandle[0],
+                        close_timestamp: resultCandle[0] + ((minutes*60000)-1),
+                        open: resultCandle[1],
+                        high: resultCandle[3],
+                        low: resultCandle[4],
+                        close: resultCandle[2],
+                        base_volume: resultCandle[5],
+                        quote_volume: resultCandle[5]*resultCandle[2], // estimate; maybe use the average? (open+close/2)
+                    })
+                );
+            }
+        );
     }
 
 }

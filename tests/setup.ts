@@ -17,14 +17,14 @@ export class CacheViaNothing {
 
 export const exchange = new BitFinex(
     process.env.API_KEY,
-    process.env.API_SECRET, 
+    process.env.API_SECRET,
+    new HttpClient({
+        logger: console,
+        cache: new CacheViaNothing(),
+        minTimeoutPerRequest: 500,
+        maxRandomPreRequestTimeout: 0,
+    }),
     {
-        client: new HttpClient({
-            logger: console,
-            cache: new CacheViaNothing(),
-            minTimeoutPerRequest: 500,
-            maxRandomPreRequestTimeout: 0,
-        }),
         logger: console
     }
 );
