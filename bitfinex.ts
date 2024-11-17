@@ -33,6 +33,8 @@ export class BitFinex implements Exchange,CandleFetcher {
 
     logger: LoggerInterface | undefined;
 
+    assetTickerSymbols: {[base: string]: { [quote: string]: string } } = {};
+
     constructor(
         apiKey: string, 
         apiSecret: string, 
@@ -47,7 +49,6 @@ export class BitFinex implements Exchange,CandleFetcher {
         this.apiSecret = apiSecret;
         this.nonce = Date.now();
         this.client = client;
-
         this.logger = options?.logger;
     }
 
@@ -130,7 +131,7 @@ export class BitFinex implements Exchange,CandleFetcher {
     }
 
     getAssetDefaultTickerSymbol(baseAsset: string): string | null {
-        return `t${baseAsset}USD`
+        return this.assetTickerSymbols[baseAsset]['USD'];
     }
 
     getTickerData(symbol: string): Promise<{ data: TickerData; fromCache: Boolean; } | null> {
@@ -144,6 +145,10 @@ export class BitFinex implements Exchange,CandleFetcher {
                 const ticker = response.find(
                     (ticker: [string]) => ticker[0] === symbol
                 );
+
+                if (!ticker) {
+                    this.logger?.warn("Can't find ticker data for symbol", symbol);
+                }
 
                 return {
                     data: {
@@ -176,7 +181,12 @@ export class BitFinex implements Exchange,CandleFetcher {
     }
 
     _getBaseAsset(symbol: string): string {
-        return symbol.replace(/\:?USD$/,'').replace(/^t/,'');
+        const base = symbol.replace(/\:?USD$/,'').replace(/^t/,'');
+        this.assetTickerSymbols[base] ??= {};
+        
+        this.assetTickerSymbols[base]['USD'] = symbol;
+        
+        return base;
     }
     
 
