@@ -34,6 +34,7 @@ export class BitFinex implements Exchange,CandleFetcher {
     logger: LoggerInterface | undefined;
 
     assetTickerSymbols: {[base: string]: { [quote: string]: string } } = {};
+    tickerAssets: {[ticker:string]: {base: string, quote: string}} = {};
 
     constructor(
         apiKey: string, 
@@ -163,7 +164,47 @@ export class BitFinex implements Exchange,CandleFetcher {
                     fromCache: fromCache
                 }
             }
-        );
+        ).then(
+            (result: { data: TickerData; fromCache: boolean; }) => {
+                const asset = this.tickerAssets[symbol].base;
+                console.log('asset', asset);
+                return Promise.all(
+                    [
+                        this.client.getWithCache(
+                            `https://api-pub.bitfinex.com/v2/conf/pub:map:currency:label,pub:map:currency:sym,pub:map:currency:unit,pub:list:currency:margin,pub:map:currency:pool,pub:map:currency:explorer,pub:map:tx:method,pub:list:pair:exchange,pub:list:pair:margin,pub:list:pair:futures,pub:list:currency:futures,pub:list:currency:paper,pub:list:currency:viewonly,pub:info:tx:status,pub:map:category:futures,pub:list:pair:cst,pub:map:pair:sym,pub:list:currency:securities,pub:list:pair:securities,pub:map:tx:method:pool,pub:list:currency:securities:portfolio,pub:info:currency:restrict,pub:info:pair:restrict,pub:list:category:securities,pub:map:category:securities,pub:list:currency:securities:accredited`
+                        ),                    
+                        this.client.getWithCache(
+                            `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd`
+                        ),
+                    ]
+                )
+                .then(
+                    ([labelData, marketData]) => {
+                        const label = labelData?.response[0]?.find( ([assetSymbol]: [string, string]) => assetSymbol === asset )[1];
+                        if (!label) {
+                            return result;
+                        }
+                        const circulating_supply = marketData?.response?.find(
+                            (data: {name: string, symbol: string, circulating_supply: number}) => {
+                                return data.name.toLowerCase() === label.toLowerCase() && data.symbol === asset.toLowerCase();
+                            }
+                        )?.circulating_supply;
+
+                        console.log('circulating_supply',  circulating_supply);
+
+                        result.data.circulating_supply = circulating_supply;
+
+                        return result;
+                    }
+                )
+                .catch(
+                    (e) => {
+                        console.log('error', e);
+                        return result;
+                    }
+                )
+            }
+        )
     }
 
     getSupportedAssets(): Promise<string[]> {
@@ -185,6 +226,7 @@ export class BitFinex implements Exchange,CandleFetcher {
         this.assetTickerSymbols[base] ??= {};
         
         this.assetTickerSymbols[base]['USD'] = symbol;
+        this.tickerAssets[symbol] = { base: base, quote: 'USD' };
         
         return base;
     }

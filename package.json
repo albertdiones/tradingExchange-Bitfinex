@@ -2,6 +2,10 @@
   "name": "tradeexchange-bitfinex",
   "module": "bitfinex.ts",
   "type": "module",
+  "scripts": {
+    "loop-test": "while true; do bun test --timeout=20000; sleep 5; done",
+    "loop-validate": "while true; do bun test --timeout=20000; tsc --noEmit --pretty --skipLibCheck; sleep 5; done"
+  },
   "devDependencies": {
     "dotenv": "^16.4.5",
     "@types/bun": "latest",
