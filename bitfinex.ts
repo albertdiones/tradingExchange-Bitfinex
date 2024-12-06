@@ -167,7 +167,6 @@ export class BitFinex implements Exchange,CandleFetcher {
         ).then(
             (result: { data: TickerData; fromCache: boolean; }) => {
                 const asset = this.tickerAssets[symbol].base;
-                console.log('asset', asset);
                 return Promise.all(
                     [
                         this.client.getWithCache(
@@ -180,8 +179,13 @@ export class BitFinex implements Exchange,CandleFetcher {
                 )
                 .then(
                     ([labelData, marketData]) => {
-                        const label = labelData?.response[0]?.find( ([assetSymbol]: [string, string]) => assetSymbol === asset )[1];
+                        if (!labelData?.response[0]) {
+                            this.logger?.warn(`Failed to fetch label datas`);
+                            return result;
+                        }
+                        const label = labelData?.response[0]?.find( ([assetSymbol]: [string, string]) => assetSymbol === asset )?.[1];
                         if (!label) {
+                            this.logger?.warn(`Label not found for: ${asset}`)
                             return result;
                         }
                         const circulating_supply = marketData?.response?.find(
@@ -190,8 +194,6 @@ export class BitFinex implements Exchange,CandleFetcher {
                             }
                         )?.circulating_supply;
 
-                        console.log('circulating_supply',  circulating_supply);
-
                         result.data.circulating_supply = circulating_supply;
 
                         return result;
@@ -199,7 +201,7 @@ export class BitFinex implements Exchange,CandleFetcher {
                 )
                 .catch(
                     (e) => {
-                        console.log('error', e);
+                        this.logger?.warn("error occured during external fetch of circulating supply:", e, e.message, asset)
                         return result;
                     }
                 )
@@ -351,7 +353,7 @@ export class BitFinex implements Exchange,CandleFetcher {
         .then(
             async (submittedOrder: Array<any>) => {             
 
-                console.log('checkOrder() result', submittedOrder);
+                this.logger?.info('checkOrder() result', submittedOrder);
                 if (!submittedOrder) {
                     return;
                 }
@@ -377,7 +379,7 @@ export class BitFinex implements Exchange,CandleFetcher {
     
         return this._fetch('/v2/auth/w/order/cancel', requestBody)
             .then((result) => {
-                console.log(result);
+                this.logger?.info('cancel result', result);
                 return this.getSubmittedOrder(
                     parseInt(order.external_id)
                 )
@@ -470,7 +472,7 @@ export class BitFinex implements Exchange,CandleFetcher {
         .then(
             (trades: Array<Array<any>>) => {
 
-                console.log('trades', trades);
+                this.logger?.info('trades', trades);
 
                 if (trades.length <= 0) {
                     return dbOrder;
