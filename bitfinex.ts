@@ -98,7 +98,7 @@ export class BitFinex implements Exchange,CandleFetcher {
             }
         )
         .catch((error) => {
-            console.error('Error:', error, error.stack);
+            this.logger?.error('Error:', error, error.stack);
             throw error;
         });
     }
@@ -394,7 +394,7 @@ export class BitFinex implements Exchange,CandleFetcher {
                 )
             }).catch(
                 (error) => {
-                    console.error(error);
+                    this.logger?.error(error);
 
                     // retry
                     return Bun.sleep(1000).then(
