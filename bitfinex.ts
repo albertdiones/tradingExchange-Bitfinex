@@ -173,7 +173,7 @@ export class BitFinex implements Exchange,CandleFetcher {
                             `https://api-pub.bitfinex.com/v2/conf/pub:map:currency:label,pub:map:currency:sym,pub:map:currency:unit,pub:list:currency:margin,pub:map:currency:pool,pub:map:currency:explorer,pub:map:tx:method,pub:list:pair:exchange,pub:list:pair:margin,pub:list:pair:futures,pub:list:currency:futures,pub:list:currency:paper,pub:list:currency:viewonly,pub:info:tx:status,pub:map:category:futures,pub:list:pair:cst,pub:map:pair:sym,pub:list:currency:securities,pub:list:pair:securities,pub:map:tx:method:pool,pub:list:currency:securities:portfolio,pub:info:currency:restrict,pub:info:pair:restrict,pub:list:category:securities,pub:map:category:securities,pub:list:currency:securities:accredited`
                         ),                    
                         this.client.getWithCache(
-                            `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd`
+                            `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&order=market_cap_desc`
                         ),
                     ]
                 )
