@@ -524,6 +524,13 @@ export class BitFinex implements Exchange,CandleFetcher {
         )
     }
 
+    checkForErrorResponse(result:Array<any>): void {
+        if (result[0] !== 'error') {
+            return;
+        }
+        throw Error(`error code: ${result[1]}: ${result[2]}`);
+    }
+
     async fetchCandles(symbol: string, minutes: number, limit: number): Promise<TickerCandle[] | null> {
         const interval = this.minutesToInterval(minutes);
         const url = `${BitFinex.baseUrl}/v2/candles/trade:${interval}:${symbol}/hist?limit=${limit}`;
@@ -532,7 +539,9 @@ export class BitFinex implements Exchange,CandleFetcher {
         ).then(
             (result) => {
 
-                return result.map(
+                this.checkForErrorResponse(result as Array<any>);
+
+                return (result as Array<any>).map(
                     (resultCandle:[number, number, number, number, number, number]): TickerCandle => ({
                         open_timestamp: resultCandle[0],
                         close_timestamp: resultCandle[0] + ((minutes*60000)-1),
