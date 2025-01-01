@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "nonChalantJs": "albertdiones/nonChalant#main",
-    "tradeexchanges": "albertdiones/tradeExchanges.git#master",
+    "tradeexchanges": "albertdiones/tradeExchanges#master",
     "tradeorders": "albertdiones/tradeOrders#master"
   },
   "jest": {
