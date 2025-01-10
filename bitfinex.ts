@@ -260,7 +260,7 @@ export class BitFinex implements Exchange,CandleFetcher {
             return result;
         });
     }
-    async submitOrder(order: Order): Promise<Order | void> {
+    async submitOrder(order: Order): Promise<Order> {
 
         if (order.quantity.quantity <= 0) {
             throw "Invalid quantity";
@@ -292,6 +292,9 @@ export class BitFinex implements Exchange,CandleFetcher {
                         return holding.name === 'USD';
                     }
                 );
+                if (!assetHolding) {
+                    throw `No asset holding found for ${this._getSymbolAsset(order.symbol)}`;
+                }
                 orderQuantity = ((orderQuantity/100)*assetHolding.amount)/order.price1;
             }
             else if (order.direction === OrderDirection.SHORT) {
@@ -300,6 +303,9 @@ export class BitFinex implements Exchange,CandleFetcher {
                         return holding.name === this._getSymbolAsset(order.symbol);
                     }
                 );
+                if (!assetHolding) {
+                    throw `No asset holding found for ${this._getSymbolAsset(order.symbol)}`;
+                }
                 orderQuantity = (orderQuantity/100)*assetHolding.amount;
             }
             else {
