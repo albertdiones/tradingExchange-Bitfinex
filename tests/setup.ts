@@ -1,6 +1,8 @@
 import HttpClient from "nonChalantJs";
 import { BitFinex } from "../bitfinex";
 
+import Logger from 'add_logger';
+
 
 export class CacheViaNothing {
     async getItem(key: string): Promise<string | null> {
@@ -25,6 +27,6 @@ export const exchange = new BitFinex(
         maxRandomPreRequestTimeout: 0,
     }),
     {
-        logger: console
+        logger: new Logger('bitfinex'),
     }
 );
