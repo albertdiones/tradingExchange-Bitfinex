@@ -471,7 +471,7 @@ export class BitFinex implements Exchange,CandleFetcher {
             statusKey = 'EXECUTED';
         }
 
-        dbOrder.status = BitFinex.orderStatuses[statusKey] ?? 'unknown';
+        dbOrder.status = BitFinex.orderStatuses[statusKey] ?? null;
 
         if ([OrderStatus.FILLED].includes(dbOrder.status)) {
             // could be improved, use the last(or first?) trade's timestamp as execution
