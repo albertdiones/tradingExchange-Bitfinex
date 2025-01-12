@@ -6,6 +6,14 @@ import {type LoggerInterface, Logger} from 'add_logger';
 import type { AssetHolding, AssetWallet, CandleFetcher, Exchange, TickerFetcher } from 'tradeexchanges';
 import type { rawExchangeCandle, TickerCandle, TickerData } from 'tradeexchanges/tradingCandles';
 
+
+interface OrderRequestBody {
+    type: string, 
+    symbol: string,
+    amount: string,
+    price?: string
+};
+
 export class BitFinex implements Exchange,CandleFetcher {
 
     static baseUrl = 'https://api.bitfinex.com';
@@ -313,7 +321,7 @@ export class BitFinex implements Exchange,CandleFetcher {
             }            
         }
 
-        const requestBody = {
+        const requestBody: OrderRequestBody = {
             type: BitFinex.types[order.type], 
             symbol: order.symbol,
             amount: orderQuantity.toString(),
@@ -361,7 +369,7 @@ export class BitFinex implements Exchange,CandleFetcher {
 
                 this.logger?.info('checkOrder() result', submittedOrder);
                 if (!submittedOrder) {
-                    return;
+                    return null;
                 }
 
                 const dbOrder = await this.getSubmittedOrder(Number.parseInt(submittedOrder[0]));
