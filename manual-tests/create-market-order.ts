@@ -1,6 +1,6 @@
-import { Order, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType } from "tradeorders/schema";
+import { Order, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType } from "tradeOrders/schema";
 import { BitFinex } from "../bitfinex";
-import { marketOrder } from "tradeorders/constructors";
+import { marketOrder } from "tradeOrders/constructors";
 
 const exchange = new BitFinex(process.env.API_KEY, process.env.API_SECRET);
 

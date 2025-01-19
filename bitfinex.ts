@@ -1,5 +1,5 @@
-import { type OrderHandler } from 'tradeorders/orderHandler'
-import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType, type SubmittedOrder } from 'tradeorders/schema';
+import { type OrderHandler } from 'tradeOrders/orderHandler'
+import { Order, ORDER_TYPE_LIMIT, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType, type SubmittedOrder } from 'tradeOrders/schema';
 import crypto from 'crypto';
 import HttpClient from 'nonChalantJs';
 import {type LoggerInterface, Logger} from 'add_logger';

@@ -1,4 +1,4 @@
-import { Order, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType, type SubmittedOrder } from "tradeorders/schema";
+import { Order, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType, type SubmittedOrder } from "tradeOrders/schema";
 import { BitFinex } from "../bitfinex";
 
 

@@ -1,4 +1,4 @@
-import { Order, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType } from "tradeorders/schema";
+import { Order, OrderDirection, OrderQuantityUnit, OrderStatus, OrderType } from "tradeOrders/schema";
 import { BitFinex } from "../bitfinex";
 import HttpClient from "nonChalantJs";
 import exchange from './test-client.ts';
